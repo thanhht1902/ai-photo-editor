@@ -1,0 +1,17 @@
+{
+  "name": "prompt-photo-editor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24.13" },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env --experimental-strip-types server/main.ts",
+    "dev:web": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "start": "node --env-file-if-exists=.env --experimental-strip-types server/main.ts",
+    "test": "node --experimental-strip-types --test --test-isolation=none --test-concurrency=1 tests/*.test.ts",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": { "react": "19.2.7", "react-dom": "19.2.7" },
+  "devDependencies": { "@types/node": "24.13.5", "@types/react": "19.2.18", "@types/react-dom": "19.2.3", "typescript": "6.0.3", "vite": "8.3.0" }
+}
