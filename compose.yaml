@@ -1,0 +1,25 @@
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    ports:
+      - "127.0.0.1:${PORT:-8787}:8787"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8787"
+      DATA_DIR: /app/data
+      IM_CONVERT: convert
+      IM_IDENTIFY: identify
+      SRGB_PROFILE: /usr/share/color/icc/ghostscript/srgb.icc
+    volumes:
+      - stillroom-data:/app/data
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 2m
+
+volumes:
+  stillroom-data:

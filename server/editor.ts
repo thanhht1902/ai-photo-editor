@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { Store } from './store.ts';
 import { configuredProvider, decodeBase64, validatePlan } from './providers.ts';
 import type { Provider, PlanInput } from './providers.ts';
-import { checksum, composite, contextBox, convert, crop, decodeMask, encodeMask, encodeRGBA, imageType, inspect, mapBox, normalize, preview, rgba, saveBytes, scaleMask, verifyChecksum, verifyProtected } from './images.ts';
+import { composite, contextBox, convert, crop, decodeMask, encodeMask, encodeRGBA, imageType, inspect, mapBox, normalize, preview, rgba, saveBytes, scaleMask, verifyChecksum, verifyProtected } from './images.ts';
 import { AppError, invariant } from './types.ts';
 import type { Asset, Job, Message, Project, Version } from './types.ts';
 

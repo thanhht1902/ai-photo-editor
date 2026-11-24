@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { Store } from '../server/store.ts';
 import { Editor } from '../server/editor.ts';
 import { MockProvider } from '../server/providers.ts';
-import type { EditInput, PlanInput } from '../server/providers.ts';
+import type { EditInput } from '../server/providers.ts';
 import type { Job, Version, Asset } from '../server/types.ts';
 import { checksum, convert, rgba, verifyProtected } from '../server/images.ts';
 

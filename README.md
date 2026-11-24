@@ -40,6 +40,38 @@ npm run dev:web
 Use **http://127.0.0.1:5173**; Vite proxies `/api` to port 8787. For a different
 backend port, update `vite.config.ts` as well as `PORT`.
 
+## Run with Docker
+
+Requirements: Docker Engine and Docker Compose v2.24+ (or Docker Desktop), plus
+GNU Make for the `make` shortcuts. Node and ImageMagick are included in the image.
+
+```sh
+cp .env.example .env # optional; defaults use the mock provider
+make docker-up
+```
+
+Open **http://127.0.0.1:8787**. Compose publishes the port on host loopback only;
+`PORT` in `.env` changes that host port. Inside the container, the server listens
+on `0.0.0.0:8787` and retains the localhost Host/Origin checks. The runtime runs
+as the unprivileged `node` user and includes ImageMagick 6 Q16 and the sRGB profile.
+`.env` is passed to the server by Compose and excluded from the build context.
+
+Projects persist in the `stillroom-data` named volume at `/app/data`, independently
+of the host `./data` directory. Compose sets container paths for image executables,
+the ICC profile, and storage, overriding their local `.env` values.
+
+```sh
+make docker-logs  # follow server logs
+make docker-down # stop containers and keep the data volume
+make docker-test # lint, build, and test in the Docker build environment
+```
+
+Without Make, use `docker compose up --build --detach --wait`,
+`docker compose logs --follow`, `docker compose down`, and
+`docker build --target checks -t stillroom-checks .`, respectively.
+To back up container data, stop the service and copy the entire data volume,
+following the storage and recovery guidance below.
+
 ## What works
 
 - JPEG/PNG import up to 100 MB and 30 million pixels, including 6000 × 4000.
@@ -77,11 +109,17 @@ stored references are not sent in this milestone.
 
 ## Verification
 
+After `npm ci`, run all pre-commit checks with GNU Make:
+
 ```sh
-npm run check
-npm test
-npm run build
+make pre-commit
 ```
+
+This runs ESLint, the TypeScript check and Vite production build, then tests,
+stopping at the first failure. It is an explicit command; it does not install a
+Git hook. Individual commands are `make lint`, `make build`, and `make test`
+(or `npm run lint`, `npm run build`, and `npm test`). Use `make lint-fix` to apply
+available automatic lint fixes, or `make check` for type checking alone.
 
 Tests use deterministic fakes, including real ImageMagick processing on a 24 MP
 fixture. They cover dimensions, original checksums, EXIF orientation, coordinate
@@ -134,7 +172,8 @@ presented as physically accurate linear-light blending. JPEG export is lossy.
 8-bit generated detail does not become native 16-bit detail in a 16-bit export.
 Smaller provider outputs are rejected rather than silently enlarged.
 
-This build binds **127.0.0.1 only** and has host/origin checks. It has no user
+Local runs bind **127.0.0.1** by default; Docker Compose publishes on host
+**127.0.0.1 only**. Both retain host/origin checks. It has no user
 authentication and is intended for a trusted, single-owner workstation. Do not
 publish it through a tunnel or reverse proxy. Authentication, credential
 protection, remote endpoint controls, production migrations, resource scheduling,

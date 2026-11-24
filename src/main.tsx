@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Asset, Job, Message, Project, RemovalPlan, Target, Version } from '../server/types.ts';
 import './styles.css';
@@ -43,6 +43,8 @@ function App() {
   const request = useRef<{prompt:string;baseVersionId:string;key:string}|null>(null);
   const project = snapshot?.project, version = snapshot?.versions.find(v=>v.id===project?.activeVersionId);
   const pending = snapshot?.jobs.find(j=>!done(j));
+  const pendingId = pending?.id, pendingStatus = pending?.status;
+  const hasSnapshot = snapshot !== null;
   const latest = snapshot?.jobs.at(-1);
   const root = snapshot?.versions.find(v=>!v.parentId);
   const shownVersion = before ? root : version;
@@ -52,26 +54,26 @@ function App() {
   const assetUrl = (id:string) => `/api/projects/${project!.id}/assets/${id}`;
 
   async function loadProjects() { setProjects(await api<Project[]>('/projects')); }
-  async function open(id:string) {
+  const open = useCallback(async (id:string) => {
     selectedId.current = id; setError(''); setBefore(false); setZoom(1);
     try { const data = await api<Snapshot>(`/projects/${id}`); if (selectedId.current===id) {setSnapshot(data); localStorage.setItem('stillroom-project',id);} } catch (e) { fail(e); }
-  }
+  }, []);
   function fail(e:unknown) { setError(e instanceof Error ? e.message : 'Something went wrong.'); }
   async function refresh(id = selectedId.current) {
     if (!id) return;
     const data = await api<Snapshot>(`/projects/${id}`);
     if (selectedId.current===id) setSnapshot(data);
   }
-  useEffect(()=>{ void (async()=>{try { await loadProjects(); setSettings(await api<Settings>('/settings')); const last=localStorage.getItem('stillroom-project'); if(last) await open(last); } catch(e){fail(e);} })(); },[]);
+  useEffect(()=>{ void (async()=>{try { await loadProjects(); setSettings(await api<Settings>('/settings')); const last=localStorage.getItem('stillroom-project'); if(last) await open(last); } catch(e){fail(e);} })(); },[open]);
   useEffect(()=>{
-    if (!project?.id || !pending || pending.status==='clarification') return;
+    if (!project?.id || !pendingId || pendingStatus==='clarification') return;
     let disposed=false, timer:ReturnType<typeof setTimeout>;
     const id=project.id;
     async function poll() {try {const data=await api<Snapshot>(`/projects/${id}`);if(!disposed && selectedId.current===id)setSnapshot(data);}catch(e){if(!disposed)fail(e);}if(!disposed)timer=setTimeout(()=>{void poll();},1200);}
     timer=setTimeout(()=>{void poll();},700);
     return ()=>{disposed=true;clearTimeout(timer);};
-  },[project?.id,pending?.id,pending?.status]);
-  useLayoutEffect(()=>{ const node=canvasRef.current;if(!node)return;const observer=new ResizeObserver(([entry])=>setViewport({width:entry.contentRect.width,height:entry.contentRect.height}));observer.observe(node);return()=>observer.disconnect(); },[!!snapshot]);
+  },[project?.id,pendingId,pendingStatus]);
+  useLayoutEffect(()=>{ const node=canvasRef.current;if(!node)return;const observer=new ResizeObserver(([entry])=>setViewport({width:entry.contentRect.width,height:entry.contentRect.height}));observer.observe(node);return()=>observer.disconnect(); },[hasSnapshot]);
   useEffect(()=>{chatRef.current?.scrollTo({top:chatRef.current.scrollHeight,behavior:'smooth'});},[snapshot?.messages.length,pending?.status]);
 
   async function upload(file:File,reference=false) {

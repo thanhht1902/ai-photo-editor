@@ -21,6 +21,7 @@ async function json(req: IncomingMessage): Promise<Record<string, unknown>> {
 }
 function send(res: ServerResponse, data: unknown, status = 200) { res.writeHead(status, {'Content-Type':'application/json; charset=utf-8'}); res.end(JSON.stringify(data)); }
 function text(value: unknown, field: string): string { invariant(typeof value === 'string', `${field} must be a string.`); return value; }
+// eslint-disable-next-line no-control-regex -- Strip control characters from user-supplied filenames.
 function filename(req: IncomingMessage) { try { return decodeURIComponent(String(req.headers['x-file-name'] || 'Untitled photo')).replace(/[\x00-\x1f/\\]/g, '_').slice(0,200); } catch { throw new AppError('Invalid file name.'); } }
 
 export function createApp(editor: Editor, dist = resolve('dist')) {

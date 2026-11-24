@@ -1,0 +1,13 @@
+.git
+.agents
+.aws
+.codex
+node_modules
+dist
+data
+coverage
+.venv
+.env
+.env.*
+!.env.example
+*.log
